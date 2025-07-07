@@ -1,0 +1,133 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: #fdfde4; /* color de papel */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+.nav-bar {
+  background: none;
+  padding: 1rem;
+  color: #333;
+  text-align: center;
+  font-weight: bold;
+  position: relative;
+}
+
+.nav-bar::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: #ddd;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.main-content {
+  padding: 1rem;
+  max-width: 600px;
+  margin: auto;
+}
+
+.view-container {
+  background: repeating-linear-gradient(
+    white,
+    white 30px,
+    #e6e6e6 31px,
+    #e6e6e6 32px
+  );
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.agenda-list,
+.contacts-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.agenda-item,
+.contact-card {
+  background: transparent;
+  border: none;
+  padding: 0.5rem 0;
+  position: relative;
+  cursor: pointer;
+}
+
+.agenda-item::before,
+.contact-card::before {
+  content: '•';
+  position: absolute;
+  left: -1em;
+  color: #888;
+}
+
+.contact-details {
+  margin-left: 1ch;
+}
+
+.contact-name {
+  font-weight: bold;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.contact-email,
+.contact-phone,
+.contact-address {
+  font-size: 0.85rem;
+  color: #555;
+  margin: 0.2rem 0 0 0;
+}
+
+.actions {
+  display: none;
+}
+
+.create-form {
+  background: transparent;
+  border-top: 2px dashed #ccc;
+  padding: 0.5rem 0;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.input {
+  flex: 1;
+  border: none;
+  border-bottom: 1px solid #888;
+  padding: 0.25rem;
+  background: transparent;
+}
+
+.btn-primary {
+  background: #004d99;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 4px;
+}
+
+.back-button {
+  background: transparent;
+  color: #004d99;
+  padding: 0;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  text-decoration: underline;
+}
+
+.modal-box {
+  border-radius: 12px;
+}
+
+.modal-overlay {
+  background: rgba(0,0,0,0.5);
+}

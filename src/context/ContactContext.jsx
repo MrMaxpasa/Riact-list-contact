@@ -1,105 +1,39 @@
-
 import React, { createContext, useState, useEffect } from 'react';
 
 export const ContactContext = createContext();
 
 export const ContactProvider = ({ children }) => {
   const API_URL = 'https://playground.4geeks.com/contact';
-  const [contacts, setContacts] = useState([]);
   const [agendas, setAgendas] = useState([]);
-  const [selectedAgenda, setSelectedAgenda] = useState(null);
   const [agendaContacts, setAgendaContacts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchContacts();
     fetchAgendas();
   }, []);
-
-  const fetchContacts = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/`);
-      const data = await res.json();
-      setContacts(data);
-      setError(null);
-    } catch (err) {
-      setError('Error loading contacts');
-    } finally { setLoading(false); }
-  };
-
-  const addContact = async contact => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(contact)
-      });
-      const newContact = await res.json();
-      setContacts(prev => [...prev, newContact]);
-    } catch {
-      setError('Error creating contact');
-    } finally { setLoading(false); }
-  };
-
-  const updateContact = async (id, updated) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updated)
-      });
-      const data = await res.json();
-      setContacts(prev => prev.map(c => c.id === id ? data : c));
-    } catch {
-      setError('Error updating contact');
-    } finally { setLoading(false); }
-  };
-
-  const deleteContact = async id => {
-    setLoading(true);
-    try {
-      await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-      setContacts(prev => prev.filter(c => c.id !== id));
-    } catch {
-      setError('Error deleting contact');
-    } finally { setLoading(false); }
-  };
 
   const fetchAgendas = async () => {
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/agendas?offset=0&limit=100`);
       const data = await res.json();
-      setAgendas(data);
-    } catch {
+      if (Array.isArray(data)) {
+        setAgendas(data);
+      } else if (data && Array.isArray(data.agendas)) {
+        setAgendas(data.agendas);
+      } else {
+        console.error('fetchAgendas: unexpected response', data);
+        setAgendas([]);
+      }
+      setError(null);
+    } catch (err) {
+      console.error(err);
       setError('Error loading agendas');
-    } finally { setLoading(false); }
-  };
-
-  const createAgenda = async slug => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/agendas/${encodeURIComponent(slug)}`, { method: 'POST' });
-      const newAgenda = await res.json();
-      setAgendas(prev => [...prev, newAgenda]);
-    } catch {
-      setError('Error creating agenda');
-    } finally { setLoading(false); }
-  };
-
-  const fetchAgendaBySlug = async slug => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/agendas/${encodeURIComponent(slug)}`);
-      const data = await res.json();
-      setSelectedAgenda(data);
-    } catch {
-      setError('Error loading agenda');
-    } finally { setLoading(false); }
+      setAgendas([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchAgendaContacts = async slug => {
@@ -107,52 +41,68 @@ export const ContactProvider = ({ children }) => {
     try {
       const res = await fetch(`${API_URL}/agendas/${encodeURIComponent(slug)}/contacts`);
       const data = await res.json();
-      setAgendaContacts(data);
-    } catch {
+      setAgendaContacts(Array.isArray(data) ? data : []);
+      setError(null);
+    } catch (err) {
+      console.error(err);
       setError('Error loading agenda contacts');
-    } finally { setLoading(false); }
+      setAgendaContacts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const addContactToAgenda = async (slug, contact) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/agendas/${encodeURIComponent(slug)}/contacts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(contact)
-      });
-      const newContact = await res.json();
-      setAgendaContacts(prev => [...prev, newContact]);
-    } catch {
+      const res = await fetch(
+        `${API_URL}/agendas/${encodeURIComponent(slug)}/contacts`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: contact.name, phone: contact.phone, email: contact.email, address: contact.address })
+        }
+      );
+      const result = await res.json();
+      if (!res.ok) {
+        console.error('addContactToAgenda error:', result);
+        setError(`Error adding contact: ${result.msg || res.status}`);
+        return;
+      }
+      setAgendaContacts(prev => [...prev, result]);
+      setError(null);
+    } catch (err) {
+      console.error(err);
       setError('Error adding contact to agenda');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const removeContactFromAgenda = async (slug, contactId) => {
     setLoading(true);
     try {
-      await fetch(`${API_URL}/agendas/${encodeURIComponent(slug)}/contacts/${contactId}`, { method: 'DELETE' });
+      await fetch(
+        `${API_URL}/agendas/${encodeURIComponent(slug)}/contacts/${contactId}`,
+        { method: 'DELETE' }
+      );
       setAgendaContacts(prev => prev.filter(c => c.id !== contactId));
-    } catch {
+      setError(null);
+    } catch (err) {
+      console.error(err);
       setError('Error removing contact from agenda');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <ContactContext.Provider value={{
-      contacts,
       agendas,
-      selectedAgenda,
       agendaContacts,
       loading,
       error,
-      fetchContacts,
-      addContact,
-      updateContact,
-      deleteContact,
       fetchAgendas,
-      createAgenda,
-      fetchAgendaBySlug,
       fetchAgendaContacts,
       addContactToAgenda,
       removeContactFromAgenda
