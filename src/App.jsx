@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ContactProvider } from './context/ContactContext.jsx';
@@ -13,9 +12,9 @@ const App = () => (
       </header>
       <main className="main-content">
         <Routes>
-          {/* Al iniciar, mostramos la lista de agendas */}
+          
           <Route path="/" element={<Agendas />} />
-          {/* Al seleccionar una agenda, mostramos sus contactos y el CRUD */}
+          
           <Route path="/agendas/:slug/contacts" element={<AgendaContacts />} />
         </Routes>
       </main>

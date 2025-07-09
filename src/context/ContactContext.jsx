@@ -36,12 +36,44 @@ export const ContactProvider = ({ children }) => {
     }
   };
 
+  const createAgenda = async slug => {
+    if (!slug) return null;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/agendas/${encodeURIComponent(slug)}`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        console.error('createAgenda error:', data);
+        setError(`Error creating agenda: ${data.msg || res.status}`);
+        return null;
+      }
+      const newAgenda = { id: data.id || slug, slug, name: slug };
+      setAgendas(prev => [...prev, newAgenda]);
+      setError(null);
+      return newAgenda;
+    } catch (err) {
+      console.error(err);
+      setError('Error creating agenda');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchAgendaContacts = async slug => {
+    if (!slug) return;
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/agendas/${encodeURIComponent(slug)}/contacts`);
       const data = await res.json();
-      setAgendaContacts(Array.isArray(data) ? data : []);
+      if (Array.isArray(data)) {
+        setAgendaContacts(data);
+      } else if (data && Array.isArray(data.contacts)) {
+        setAgendaContacts(data.contacts);
+      } else {
+        console.error('fetchAgendaContacts: unexpected response', data);
+        setAgendaContacts([]);
+      }
       setError(null);
     } catch (err) {
       console.error(err);
@@ -60,7 +92,12 @@ export const ContactProvider = ({ children }) => {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: contact.name, phone: contact.phone, email: contact.email, address: contact.address })
+          body: JSON.stringify({
+            name: contact.name,
+            phone: contact.phone,
+            email: contact.email,
+            address: contact.address
+          })
         }
       );
       const result = await res.json();
@@ -96,17 +133,53 @@ export const ContactProvider = ({ children }) => {
     }
   };
 
+  const updateContactInAgenda = async (slug, id, contact) => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${API_URL}/agendas/${encodeURIComponent(slug)}/contacts/${id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: contact.name,
+            phone: contact.phone,
+            email: contact.email,
+            address: contact.address
+          })
+        }
+      );
+      const result = await res.json();
+      if (!res.ok) {
+        console.error('updateContactInAgenda error:', result);
+        setError(`Error updating contact: ${result.msg || res.status}`);
+        return;
+      }
+      setAgendaContacts(prev => prev.map(c => (c.id === id ? result : c)));
+      setError(null);
+    } catch (err) {
+      console.error(err);
+      setError('Error updating contact in agenda');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <ContactContext.Provider value={{
-      agendas,
-      agendaContacts,
-      loading,
-      error,
-      fetchAgendas,
-      fetchAgendaContacts,
-      addContactToAgenda,
-      removeContactFromAgenda
-    }}>
+    <ContactContext.Provider
+      value={{
+        agendas,
+        agendaContacts,
+        loading,
+        error,
+        fetchAgendas,
+        createAgenda,
+        fetchAgendaContacts,
+        addContactToAgenda,
+        removeContactFromAgenda,
+        updateContactInAgenda
+      }}
+    >
       {children}
     </ContactContext.Provider>
   );
